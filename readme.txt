@@ -1,5 +1,5 @@
 This is a temporary repository for holding
-pysc2 tutorial inspired code
+pysc2 agent experiments and tutorial inspired code
 
 Contents
 
