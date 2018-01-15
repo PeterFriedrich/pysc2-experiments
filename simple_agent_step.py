@@ -8,7 +8,10 @@
 
 # implement agent from its directory
 # shell command to start agent is:
-# python -m pysc2.bin.agent --map Simple64 --agent simple_agent_step.SimpleAgent --agent_race T
+#python -m pysc2.bin.agent \
+#--map Simple64 \
+#--agent simple_agent_step.SimpleAgent \
+#--agent_race T
 
 
 # *****************************************************************************
@@ -57,6 +60,7 @@ _SUPPLY_MAX = 4
 # This simple agent class inherits from the base agent file
 # its a class that has attributes reward, episode, steps, obs_spec, action_spec
 class SimpleAgent(base_agent.BaseAgent):
+    # flags for whether or not things have been done
     base_top_left = None
     supply_depot_built = False
     scv_selected = False
@@ -109,7 +113,7 @@ class SimpleAgent(base_agent.BaseAgent):
 
                 # use transform location on the mean of the coordinates,
                 # and select spot 20 squares from command center
-                target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
+                target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 25)
 
                 # preflag building supply depot
                 self.supply_depot_built = True
@@ -117,15 +121,18 @@ class SimpleAgent(base_agent.BaseAgent):
                 # return function call to build supply depot
                 return actions.FunctionCall(_BUILD_SUPPLYDEPOT, [_NOT_QUEUED, target])
 
+        # block for building barracks
         elif not self.barracks_built and _BUILD_BARRACKS in obs.observation["available_actions"]:
             unit_type = obs.observation["screen"][_UNIT_TYPE]
             unit_y, unit_x = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
 
-            target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
+            target = self.transformLocation(int(unit_x.mean()), 15, int(unit_y.mean()), 15)
 
             self.barracks_built = True
 
             return actions.FunctionCall(_BUILD_BARRACKS, [_NOT_QUEUED, target])
+
+        # code for selecting barracks rally point
         elif not self.barracks_rallied:
             if not self.barracks_selected:
                 unit_type = obs.observation["screen"][_UNIT_TYPE]
@@ -144,6 +151,7 @@ class SimpleAgent(base_agent.BaseAgent):
                     return actions.FunctionCall( _RALLY_UNITS_MINIMAP, [_NOT_QUEUED, [29, 21]])
 
                 return actions.FunctionCall(_RALLY_UNITS_MINIMAP, [_NOT_QUEUED, [29, 21]])
+
         elif obs.observation["player"][_SUPPLY_USED] < obs.observation["player"][_SUPPLY_MAX] and _TRAIN_MARINE in obs.observation["available_actions"]:
              return actions.FunctionCall(_TRAIN_MARINE, [_QUEUED])
 

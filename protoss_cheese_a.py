@@ -6,8 +6,11 @@
 
 # implement agent from its directory
 # shell command to start agent is:
-# python -m pysc2.bin.agent --map Simple64 --agent protoss_cheese_a.SimpleAgent --agent_race P
 
+#python -m pysc2.bin.agent \
+#--map Simple64 \
+#--agent protoss_cheese_a.SimpleAgent \
+#--agent_race P
 
 # ------------------------------------------------------------------------------
 # http://liquipedia.net/starcraft2/2_Gate_Zealot_Rush
@@ -45,6 +48,7 @@ import time
 # Functions
 _BUILD_PYLON = actions.FUNCTIONS.Build_Pylon_screen.id
 _BUILD_GATEWAY = actions.FUNCTIONS.Build_Gateway_screen.id
+
 _NOOP = actions.FUNCTIONS.no_op.id
 _SELECT_POINT = actions.FUNCTIONS.select_point.id
 
@@ -56,6 +60,7 @@ _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 _PROTOSS_NEXUS = 59
 _PROTOSS_PROBE = 84
 _PROTOSS_GATEWAY = 62
+_PROTOSS_PYLON = 60
 
 # Parameters
 _PLAYER_SELF = 1
@@ -68,6 +73,7 @@ class SimpleAgent(base_agent.BaseAgent):
     base_top_left = None
     pylon_built = False
     probe_selected = False
+    gateway_built = False
 
     # projects coordinates, relative to base top or bottom
     def transformLocation(self, x, x_distance, y, y_distance):
@@ -80,7 +86,7 @@ class SimpleAgent(base_agent.BaseAgent):
     def step(self, obs):
         super(SimpleAgent, self).step(obs)
 
-        time.sleep(0.10)
+        #time.sleep(0.10)
 
         # check where base is
         if self.base_top_left is None:
@@ -104,10 +110,24 @@ class SimpleAgent(base_agent.BaseAgent):
                 unit_type = obs.observation["screen"][_UNIT_TYPE]
                 unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
 
-                target = self.transformLocation(int(unit_x.mean()), 30, int(unit_y.mean()), 0)
+                target = self.transformLocation(int(unit_x.mean()), 25, int(unit_y.mean()), 5)
 
                 self.pylon_built = True
 
                 return actions.FunctionCall(_BUILD_PYLON, [_NOT_QUEUED, target])
+
+        # build first gateway
+        elif not self.gateway_built:
+
+                if _BUILD_GATEWAY in obs.observation["available_actions"]:
+                    unit_type = obs.observation["screen"][_UNIT_TYPE]
+                    unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
+
+                    target = self.transformLocation(int(unit_x.mean()), 15, int(unit_y.mean()), 15)
+
+                    self.gateway_built = True
+
+                    return actions.FunctionCall(_BUILD_GATEWAY, [_NOT_QUEUED, target])
+
 
         return actions.FunctionCall(_NOOP, [])
