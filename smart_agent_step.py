@@ -10,7 +10,7 @@
 # and experimented on to further my own understanding
 
 # To run the agent use command:
-# python -m pysc2.bin.agent --map Simple64 --agent smart_agent_step.SmartAgent \
+# python -m pysc2.bin.agent --map Simple64 --agent smart_agent_step.AttackAgent \
 # --agent_race T --max_agent_steps 0 --norender
 
 import random
@@ -23,7 +23,6 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 from pysc2.lib import features
 
-# Functions
 _NO_OP = actions.FUNCTIONS.no_op.id
 _SELECT_POINT = actions.FUNCTIONS.select_point.id
 _BUILD_SUPPLY_DEPOT = actions.FUNCTIONS.Build_SupplyDepot_screen.id
@@ -32,7 +31,6 @@ _TRAIN_MARINE = actions.FUNCTIONS.Train_Marine_quick.id
 _SELECT_ARMY = actions.FUNCTIONS.select_army.id
 _ATTACK_MINIMAP = actions.FUNCTIONS.Attack_minimap.id
 
-# Features
 _PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
 _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 _PLAYER_ID = features.SCREEN_FEATURES.player_id.index
@@ -48,7 +46,6 @@ _TERRAN_BARRACKS = 21
 _NOT_QUEUED = [0]
 _QUEUED = [1]
 
-# actions
 ACTION_DO_NOTHING = 'donothing'
 ACTION_SELECT_SCV = 'selectscv'
 ACTION_BUILD_SUPPLY_DEPOT = 'buildsupplydepot'
