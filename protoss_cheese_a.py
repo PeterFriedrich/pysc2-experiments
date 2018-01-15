@@ -55,6 +55,7 @@ _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 # Unit IDs
 _PROTOSS_NEXUS = 59
 _PROTOSS_PROBE = 84
+_PROTOSS_GATEWAY = 62
 
 # Parameters
 _PLAYER_SELF = 1
@@ -103,7 +104,7 @@ class SimpleAgent(base_agent.BaseAgent):
                 unit_type = obs.observation["screen"][_UNIT_TYPE]
                 unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
 
-                target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
+                target = self.transformLocation(int(unit_x.mean()), 30, int(unit_y.mean()), 0)
 
                 self.pylon_built = True
 
