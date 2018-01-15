@@ -4,21 +4,30 @@
 # The blogpost is https://chatbotslife.com/building-a-basic-pysc2-agent-b109cde1477c
 
 # I've simply experimented with it and more heavily
-# commented it for the sake of my own learning
+# commented it for the sake of my own learning/reference
 
 # implement agent from its directory
 # shell command to start agent is:
 # python -m pysc2.bin.agent --map Simple64 --agent simple_agent_step.SimpleAgent --agent_race T
 
 
+# *****************************************************************************
+# pysc2 is found at
+# C:\Users\Peter\AppData\Local\Programs\Python\Python35\Lib\site-packages\pysc2
+
+# imports a base agent from pysc2.agents, used to write custom scripted agents
+# that we will inherit from
 from pysc2.agents import base_agent
+# imports actions from pysc2.lib folder.  Can read what all actions do there
 from pysc2.lib import actions
+# imports features.
 from pysc2.lib import features
 
 import time
 
+# Constants with easier descriptions to read
+
 # Functions
-#
 _BUILD_SUPPLYDEPOT = actions.FUNCTIONS.Build_SupplyDepot_screen.id
 _BUILD_BARRACKS = actions.FUNCTIONS.Build_Barracks_screen.id
 _NOOP = actions.FUNCTIONS.no_op.id
@@ -45,6 +54,8 @@ _QUEUED = [1]
 _SUPPLY_USED = 3
 _SUPPLY_MAX = 4
 
+# This simple agent class inherits from the base agent file
+# its a class that has attributes reward, episode, steps, obs_spec, action_spec
 class SimpleAgent(base_agent.BaseAgent):
     base_top_left = None
     supply_depot_built = False
@@ -61,34 +72,51 @@ class SimpleAgent(base_agent.BaseAgent):
 
         return [x + x_distance, y + y_distance]
 
+    # The game essentially calls the step method for each step
+    # obs is a series of nested arrays with observations in it
     def step(self, obs):
         super(SimpleAgent, self).step(obs)
 
-        #time.sleep(0.5)
+        # sleeps a bit each step
+        time.sleep(0.10)
 
         if self.base_top_left is None:
             player_y, player_x = (obs.observation["minimap"][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
             self.base_top_left = player_y.mean() <= 31
 
+        # section for finding and selecting random scv
         if not self.supply_depot_built:
             if not self.scv_selected:
+                # using screen part of observation
                 unit_type = obs.observation["screen"][_UNIT_TYPE]
+                # get coordinates for all scvs on screen
+                # this is a numpy array, notice data returned y, then x
                 unit_y, unit_x = (unit_type == _TERRAN_SCV).nonzero()
-
+                # select coordinates of first scv in list, must pass in x then y
                 target = [unit_x[0], unit_y[0]]
 
+                # preflag because going to select scv
                 self.scv_selected = True
-
+                # This time, function call includes select point of first scv
                 return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
+
+            # Build supply depot
             elif _BUILD_SUPPLYDEPOT in obs.observation["available_actions"]:
+                # find where the command center is
                 unit_type = obs.observation["screen"][_UNIT_TYPE]
+                # get the multiple coordinates of the command center
                 unit_y, unit_x = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
 
+                # use transform location on the mean of the coordinates,
+                # and select spot 20 squares from command center
                 target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
 
+                # preflag building supply depot
                 self.supply_depot_built = True
 
+                # return function call to build supply depot
                 return actions.FunctionCall(_BUILD_SUPPLYDEPOT, [_NOT_QUEUED, target])
+
         elif not self.barracks_built and _BUILD_BARRACKS in obs.observation["available_actions"]:
             unit_type = obs.observation["screen"][_UNIT_TYPE]
             unit_y, unit_x = (unit_type == _TERRAN_COMMANDCENTER).nonzero()
@@ -114,6 +142,7 @@ class SimpleAgent(base_agent.BaseAgent):
 
                 if self.base_top_left:
                     return actions.FunctionCall( _RALLY_UNITS_MINIMAP, [_NOT_QUEUED, [29, 21]])
+
                 return actions.FunctionCall(_RALLY_UNITS_MINIMAP, [_NOT_QUEUED, [29, 21]])
         elif obs.observation["player"][_SUPPLY_USED] < obs.observation["player"][_SUPPLY_MAX] and _TRAIN_MARINE in obs.observation["available_actions"]:
              return actions.FunctionCall(_TRAIN_MARINE, [_QUEUED])
@@ -131,6 +160,7 @@ class SimpleAgent(base_agent.BaseAgent):
 
                 if self.base_top_left:
                     return actions.FunctionCall(_ATTACK_MINIMAP, [_NOT_QUEUED, [39, 45]])
+
 
                 return actions.FunctionCall(_ATTACK_MINIMAP, [_NOT_QUEUED, [21, 24]])
         return actions.FunctionCall(_NOOP, [])
